@@ -10,7 +10,7 @@
     "margin-bottom": 0,
     "modules-left": ["hyprland/workspaces", "hyprland/submap", "hyprland/window"],
     "modules-center": ["clock"],
-    "modules-right": ["cpu", "temperature", "memory", "disk", "pulseaudio", "network", "tray"],
+    "modules-right": ["custom/music", "custom/cava", "cpu", "temperature", "memory", "disk", "pulseaudio", "network", "tray"],
 
     "hyprland/workspaces": {
         "format": "{icon}",
@@ -39,6 +39,22 @@
             "mode": "month", "weeks-pos": "right",
             "format": { "today": "<span color='#bd93f9'><b>{}</b></span>", "weekdays": "<span color='#6272a4'>{}</span>" }
         }
+    },
+    "custom/music": {
+        "exec": "~/.config/waybar/music.sh",
+        "return-type": "json",
+        "interval": 2,
+        "max-length": 48,
+        "on-click": "pkill -USR1 -f now-playing.py",
+        "on-click-right": "deadbeef --toggle-pause",
+        "on-scroll-down": "deadbeef --next",
+        "on-scroll-up": "deadbeef --prev"
+    },
+    "custom/cava": {
+        "exec": "~/.config/waybar/cava.sh",
+        "return-type": "json",
+        "restart-interval": 5,
+        "tooltip": false
     },
     "cpu": { "format": "<span font_family='JetBrainsMono Nerd Font Propo' size='large' rise='-1pt'></span> {usage}%", "interval": 2, "on-click": "kitty --class btop -e btop" },
     "temperature": {

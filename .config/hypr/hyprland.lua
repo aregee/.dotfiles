@@ -29,7 +29,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("waybar")
-    hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh init")   -- per-workspace wallpapers (awww), copland pool
+    hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh init")   -- per-workspace wallpapers (awww) + wallpaper-derived accents
     hl.exec_cmd("mako")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
@@ -38,6 +38,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("nm-applet")
     hl.exec_cmd(os.getenv("HOME") .. "/.local/bin/openrgb-single --startminimized")
     hl.exec_cmd("msm_notifier")
+    hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/now-playing.py")   -- DeaDBeeF vinyl overlay (shows itself while playing)
     -- workaround: Hyprland 0.57 misses input devices present at startup; re-announce them (see input-rescan.sh)
     hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/input-rescan.sh 2")
 end)
@@ -104,12 +105,52 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 2, bezier = "easeOut
 --------------------
 ---- WORKSPACES ----
 --------------------
--- each workspace has its own wallpaper; crossfade when the active workspace changes
+-- Each workspace has its own wallpaper (crossfade on switch) and the window borders take that
+-- wallpaper's colours. wallpaper.sh computes a palette per picture (palette.py) into
+-- ~/.cache/hypr-wallpapers/palette/<file>.lua; it is read here, so the borders change in the same
+-- frame as the workspace, before the picture even starts fading. The gradient angle turns with
+-- the workspace number. The other apps (waybar, kitty, rofi, mako, hyprlock) get the same accents
+-- from wallpaper.sh through small include files.
+local STATE   = os.getenv("HOME") .. "/.cache/hypr-wallpapers"
+local DRACULA = { accent = "bd93f9", accent2 = "ff79c6", dim = "44475a" }
+local accent_follows_wallpaper = true
+local current_ws = 1
+
+local function workspace_palette(id)
+    local f = io.open(STATE .. "/ws-" .. tostring(id), "r")
+    if not f then return DRACULA end
+    local img = f:read("*l"); f:close()
+    local name = img and img:match("[^/]+$")
+    if not name then return DRACULA end
+    local ok, pal = pcall(dofile, STATE .. "/palette/" .. name .. ".lua")
+    if ok and type(pal) == "table" and pal.accent then return pal end
+    return DRACULA
+end
+
+local function apply_accent(id)
+    local p = accent_follows_wallpaper and workspace_palette(id) or DRACULA
+    local angle = ((id - 1) * 45) % 360
+    hl.config({ general = { col = {
+        active_border   = { colors = { "rgba(" .. p.accent .. "ee)", "rgba(" .. p.accent2 .. "ee)" }, angle = angle },
+        inactive_border = "rgba(" .. p.dim .. "aa)",
+    } } })
+end
+
+-- late at night unfocused windows dim a little; checked whenever the workspace changes
+local function apply_time_of_day()
+    local h = tonumber(os.date("%H"))
+    local night = (h >= 22 or h < 7)
+    hl.config({ decoration = { inactive_opacity = night and 0.94 or 1.0, dim_inactive = night, dim_strength = 0.10 } })
+end
+
 hl.on("workspace.active", function(ws)
-    local id = ws and ws.id or nil
-    if ws and ws.special then return end
+    if not ws or ws.special then return end
+    local id = ws.id
+    if id and id > 0 then current_ws = id; apply_accent(id); apply_time_of_day() end
     hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh set " .. (id and tostring(id) or ""))
 end)
+apply_time_of_day()
+apply_accent(current_ws)   -- at login we start on workspace 1; after a reload the next switch re-applies
 -- awesome tags: home, web, dev, proc, lounge
 local tags = { "home", "web", "dev", "proc", "lounge" }
 for i, name in ipairs(tags) do
@@ -213,6 +254,48 @@ end
 hl.bind(A .. " + CTRL + equal", function() set_gaps(2) end)
 hl.bind(A .. " + CTRL + minus", function() set_gaps(-2) end)
 
+-- focus mode (SUPER+SHIFT+F): no gaps, square corners, thin borders, bar hidden; same key restores
+local focus_mode = false
+hl.bind(M .. " + SHIFT + F", function()
+    focus_mode = not focus_mode
+    if focus_mode then
+        hl.config({ general = { gaps_in = 0, gaps_out = 0, border_size = 1 },
+                    decoration = { rounding = 0, shadow = { enabled = false } } })
+    else
+        hl.config({ general = { gaps_in = gaps, gaps_out = gaps * 2, border_size = 2 },
+                    decoration = { rounding = 10, shadow = { enabled = true } } })
+    end
+    hl.exec_cmd("pkill -SIGUSR1 waybar")
+    hl.notification.create({ text = focus_mode and "focus mode" or "focus mode off", timeout = 1500 })
+end)
+
+-- SUPER+SHIFT+M: show/hide the DeaDBeeF vinyl overlay (it appears on its own while music plays)
+hl.bind(M .. " + SHIFT + M", hl.dsp.exec_cmd("pkill -USR1 -f now-playing.py"))
+
+-- From the awesome config: a workspace with a single tiled window gets no border.
+-- Hyprland has no built-in rule for this, but the Lua API lets us count windows on every change.
+local function lone_window_borders(win)
+    local ws = win and win.workspace
+    if not ws or ws.special then return end
+    local n = tonumber(ws.windows) or 0
+    hl.config({ general = { border_size = (n <= 1 and not focus_mode) and 0 or (focus_mode and 1 or 2) } })
+end
+for _, ev in ipairs({ "window.open", "window.close", "window.move_to_workspace", "window.active" }) do
+    hl.on(ev, function(win) pcall(lone_window_borders, win) end)
+end
+
+-- SUPER+SHIFT+P: accents follow the wallpaper (default) <-> plain Dracula everywhere
+hl.bind(M .. " + SHIFT + P", function()
+    accent_follows_wallpaper = not accent_follows_wallpaper
+    apply_accent(current_ws)
+    if accent_follows_wallpaper then
+        hl.exec_cmd("sh -c 'rm -f " .. STATE .. "/accent-current; " .. os.getenv("HOME") .. "/.config/hypr/wallpaper.sh set'")
+    else
+        hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh accent-reset")
+    end
+    hl.notification.create({ text = accent_follows_wallpaper and "accents: wallpaper" or "accents: dracula", timeout = 1500 })
+end)
+
 -- multi-monitor
 hl.bind(M .. " + CTRL + J", hl.dsp.focus({ monitor = "+1" }))
 hl.bind(M .. " + CTRL + K", hl.dsp.focus({ monitor = "-1" }))
@@ -278,3 +361,4 @@ hl.window_rule({ name = "cs2-tearing", match = { title = "^Counter-Strike 2$" },
 hl.layer_rule({ match = { namespace = "^waybar$" },        blur = true, ignore_alpha = 0.2 })
 hl.layer_rule({ match = { namespace = "^rofi$" },          blur = true, ignore_alpha = 0.5 })
 hl.layer_rule({ match = { namespace = "^notifications$" }, blur = true, ignore_alpha = 0.2 })
+hl.layer_rule({ match = { namespace = "^now-playing$" },   blur = true, ignore_alpha = 0.2 })

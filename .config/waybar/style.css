@@ -1,4 +1,5 @@
 /* Waybar — Dracula, floating pill bar (2026-11-25) */
+@import url("accent.css");   /* accent / accent2 / accent-dim follow the workspace wallpaper (wallpaper.sh) */
 @define-color bg      rgba(40, 42, 54, 0.80);
 @define-color bg-alt  rgba(68, 71, 90, 0.75);
 @define-color fg      #f8f8f2;
@@ -29,7 +30,7 @@ window#waybar {
 /* the three islands */
 .modules-left, .modules-center, .modules-right {
     background: @bg;
-    border: 1px solid rgba(98, 114, 164, 0.35);
+    border: 1px solid alpha(@accent, 0.45);
     border-radius: 10px;
     padding: 0 6px;
 }
@@ -44,21 +45,26 @@ window#waybar {
     border-radius: 8px;
     transition: all 150ms ease;
 }
-#workspaces button.active { color: @purple; background: @bg-alt; }
+#workspaces button.active { color: @accent; background: @bg-alt; }
 #workspaces button.urgent { color: @red; }
 #workspaces button:hover  { color: @fg; background: @bg-alt; }
 
 #submap { color: @pink; padding: 0 10px; }
-#window { color: @cyan; padding: 0 12px 0 8px; font-weight: 400; }
+#window { color: @accent2; padding: 0 12px 0 8px; font-weight: 400; }
 window#waybar.empty #window { padding: 0; }
 
 #clock { color: @fg; padding: 0 14px; font-weight: 600; }
 
 /* right side: quiet grey text, coloured glyphs via per-module colour */
-#cpu, #temperature, #memory, #disk, #pulseaudio, #network, #tray {
+#custom-music, #custom-cava, #cpu, #temperature, #memory, #disk, #pulseaudio, #network, #tray {
     padding: 0 12px;
     color: @fg;
 }
+#custom-music { color: @accent2; font-weight: 400; }
+#custom-music.paused { color: @dim; }
+#custom-music.off { padding: 0; margin: 0; min-width: 0; }
+#custom-cava { color: @accent; font-family: "JetBrainsMono Nerd Font Mono"; font-size: 12px; padding: 0 12px 0 10px; }
+#custom-cava.silent { color: alpha(@accent, 0.35); }
 #cpu         { color: @green;  }
 #temperature { color: @orange; }
 #memory      { color: @purple; }

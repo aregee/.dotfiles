@@ -10,6 +10,7 @@
     text-color: @fg;
     font: "Inter 12";
 }
+@import "accent.rasi"   // accent + pink follow the wallpaper (wallpaper.sh)
 window {
     background-color: @bg;
     border: 2px;

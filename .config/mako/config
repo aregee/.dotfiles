@@ -1,7 +1,7 @@
 font=Inter 11
 background-color=#282a36ee
 text-color=#f8f8f2
-border-color=#bd93f9
+include=/home/aregee/.config/mako/accent
 border-size=2
 border-radius=10
 padding=10
