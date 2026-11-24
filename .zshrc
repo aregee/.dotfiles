@@ -1,98 +1,83 @@
-# Debug
-#zmodload zsh/zprof
-
-##########################################################################################
-
-###########
-#  ZSHRC  #
-###########
-
-export ZSH_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
-export ZSH="$HOME/.oh-my-zsh"
-export ZSH_CUSTOM="$ZSH_CONFIG/custom"
-
-if [[ "$TERM" != 'linux' ]]; then
-    ZSH_THEME='gruvbox-dark'
+# Powerlevel10k instant prompt: keep this block at the top of ~/.zshrc (2026-11-25)
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-#CASE_SENSITIVE="true"
-#HYPHEN_INSENSITIVE="true"
-#DISABLE_AUTO_UPDATE="true"
-UPDATE_ZSH_DAYS=7
-#DISABLE_LS_COLORS="true"
-#DISABLE_AUTO_TITLE="true"
-#ENABLE_CORRECTION="true"
-#COMPLETION_WAITING_DOTS="true"
-#DISABLE_UNTRACKED_FILES_DIRTY="true"
-#HIST_STAMPS="yyyy-mm-dd"
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
 
+# Path to your oh-my-zsh installation.
+export ZSH="/home/aregee/.oh-my-zsh"
 
-#############
-#  PROFILE  #
-#############
+# Set name of the theme to load --- if set to "random", it will
+# load a random theme each time oh-my-zsh is loaded, in which case,
+# to know which specific one was loaded, run: echo $RANDOM_THEME
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+ZSH_THEME="powerlevel10k/powerlevel10k"   # was junkfood (2026-11-25)
 
-[[ -f "$HOME/.zprofile" ]] \
-    && source "$HOME/.zprofile"
+# Set list of themes to pick from when loading at random
+# Setting this variable when ZSH_THEME=random will cause zsh to load
+# a theme from this variable instead of looking in $ZSH/themes/
+# If set to an empty array, this variable will have no effect.
+# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
 
-###############
-#  DIRCOLORS  #
-###############
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
 
-# eval dircolors
-[[ -f "$HOME/.dircolors" ]] \
-    && eval "$(dircolors "$HOME/.dircolors")"
+# Uncomment the following line to disable bi-weekly auto-update checks.
+# DISABLE_AUTO_UPDATE="true"
 
+# Uncomment the following line to automatically update without prompting.
+# DISABLE_UPDATE_PROMPT="true"
 
-#####################
-#  PLUGIN SETTINGS  #
-#####################
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
 
-# bgnotify settings
-bgnotify_threshold=2    ## set your own notification threshold
-bgnotify_formatted() {
-    ## $1=exit_status, $2=command, $3=elapsed_time
-    [[ $1 -eq 0 ]] && title="Zsh" || title="Zsh (fail)"
-    bgnotify "$title (${3}s)" "$2"
-}
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
+
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment the following line to enable command auto-correction.
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line to display red dots whilst waiting for completion.
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see 'man strftime' for details.
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(
-    zsh-syntax-highlighting
-    zsh-completions
-    zsh-autosuggestions
-    command-not-found
-    bgnotify
-)
+plugins=(git)
 
-# # Native plugins
-# plugins=(
-#     command-not-found
-#     colorize
-#     bgnotify
-# )
-# source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-# source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $ZSH/oh-my-zsh.sh
 
-# Remove plugins if in tty
-[[ "$TERM" = 'linux' ]] \
-    && plugins=("${(@)plugins:#zsh-autosuggestions}")
-
-# Completions
-[[ -f "$ZSH_CONFIG/completion.zsh" ]] \
-    && source "$ZSH_CONFIG/completion.zsh"
-
-# Oh-My-Zsh
-[[ -f "$ZSH/oh-my-zsh.sh" ]] \
-    && source "$ZSH/oh-my-zsh.sh"
-
-
-########################
-#  USER CONFIGURATION  #
-########################
+# User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
@@ -101,88 +86,43 @@ plugins=(
 
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
-#     export EDITOR='vim'
+#   export EDITOR='vim'
 # else
-#     export EDITOR='mvim'
+#   export EDITOR='mvim'
 # fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
-# ssh
-# export SSH_KEY_PATH="$HOME/.ssh/rsa_id"
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+#
+export ANDROID_SDK_ROOT=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools
 
 
-############
-#  CUSTOM  #
-############
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+alias csgo="/home/aregee/media/SteamLibrary/steamapps/common/Counter-Strike\ Global\ Offensive/csgo.sh -steam -nojoy -panaroma"
+alias dotfiles="/usr/bin/env git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME"
 
-# Zsh options
-unsetopt AUTO_CD
-setopt   INTERACTIVE_COMMENTS
-setopt   PROMPT_SUBST
-setopt   HIST_IGNORE_SPACE
-setopt   HIST_IGNORE_DUPS
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
 
-# No scrolllock
-stty -ixon
+# OpenClaw Completion
+source "/home/aregee/.openclaw/completions/openclaw.zsh"
+eval "$(pyenv virtualenv-init -)"
 
-# Highlighting
-[[ -f "$ZSH_CONFIG/highlight.zsh" ]] \
-    && source "$ZSH_CONFIG/highlight.zsh"
+# neofetch is unmaintained; fastfetch replaces it (2026-11-24)
+alias neofetch=fastfetch
 
-# Aliases
-[[ -f "$ZSH_CONFIG/alias.zsh" ]] \
-    && source "$ZSH_CONFIG/alias.zsh"
-
-# FZF
-[[ -f "$ZSH_CONFIG/fzf.zsh" ]] \
-    && source "$ZSH_CONFIG/fzf.zsh"
-
-# Vim mode
-#[[ -f "$ZSH_CONFIG/vim.zsh" ]] \
-#    && source "$ZSH_CONFIG/vim.zsh"
-
-# Gruvbox colors fix
-[[ -f "$HOME/.bin/fix-gruvbox-palette" ]] \
-    && [[ "$TERM" != 'xterm-kitty' ]] \
-    && [[ "$TERM" != 'tmux-256color' ]] \
-    && source "$HOME/.bin/fix-gruvbox-palette"
-
-# TMUX
-local main_attached="$(tmux list-sessions -F '#S #{session_attached}' \
-    2>/dev/null \
-    | sed -n 's/^main[[:space:]]//p')"
-if [[ "$main_attached" -le '0' ]] && [[ "$TERM" != 'linux' ]]; then
-    tmux new -A -s main >/dev/null 2>&1
-    exit
-fi
-
-# Alternative prompt
-if [[ "$TERM" == "linux" ]] || [[ ! -d "$ZSH_CONFIG" ]]; then
-    PROMPT='[%F{167}%B%n%b%f@%M %~]'
-    PROMPT+='$(git_prompt_info)'
-    PROMPT+=' %(?.%F{108}.%F{167})%B%(!.#.$)%b%f '
-    ZSH_THEME_GIT_PROMPT_PREFIX=" [%F{214}%B"
-    ZSH_THEME_GIT_PROMPT_SUFFIX="%b%f]"
-    ZSH_THEME_GIT_PROMPT_DIRTY="%F{167}%B*%b%f"
-    ZSH_THEME_GIT_PROMPT_CLEAN=""
-fi
-
-# Empty line
-function echo_blank() {
-    echo
-}
-precmd_functions+=echo_blank
-preexec_functions+=echo_blank
-
-# Directly source prompt
-#source "$ZSH_CUSTOM/themes/gruvbox-dark.zsh-theme"
-
-# Kitty completion
-source <(kitty + complete setup zsh)
-
-##########################################################################################
-
-# Debug
-#zprof
+# Powerlevel10k prompt config; `p10k configure` would regenerate it
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
