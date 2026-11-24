@@ -1,0 +1,79 @@
+/* Waybar — Dracula, floating pill bar (2026-11-25) */
+@define-color bg      rgba(40, 42, 54, 0.80);
+@define-color bg-alt  rgba(68, 71, 90, 0.75);
+@define-color fg      #f8f8f2;
+@define-color dim     #6272a4;
+@define-color purple  #bd93f9;
+@define-color pink    #ff79c6;
+@define-color cyan    #8be9fd;
+@define-color green   #50fa7b;
+@define-color orange  #ffb86c;
+@define-color red     #ff5555;
+
+* {
+    font-family: "Inter", "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+window#waybar {
+    background: transparent;
+    color: @fg;
+}
+
+/* the three islands */
+.modules-left, .modules-center, .modules-right {
+    background: @bg;
+    border: 1px solid rgba(98, 114, 164, 0.35);
+    border-radius: 10px;
+    padding: 0 6px;
+}
+
+/* workspaces */
+#workspaces { padding: 0 2px; }
+#workspaces button {
+    padding: 0 7px;
+    margin: 5px 1px;
+    color: @dim;
+    background: transparent;
+    border-radius: 8px;
+    transition: all 150ms ease;
+}
+#workspaces button.active { color: @purple; background: @bg-alt; }
+#workspaces button.urgent { color: @red; }
+#workspaces button:hover  { color: @fg; background: @bg-alt; }
+
+#submap { color: @pink; padding: 0 10px; }
+#window { color: @cyan; padding: 0 12px 0 8px; font-weight: 400; }
+window#waybar.empty #window { padding: 0; }
+
+#clock { color: @fg; padding: 0 14px; font-weight: 600; }
+
+/* right side: quiet grey text, coloured glyphs via per-module colour */
+#cpu, #temperature, #memory, #disk, #pulseaudio, #network, #tray {
+    padding: 0 12px;
+    color: @fg;
+}
+#cpu         { color: @green;  }
+#temperature { color: @orange; }
+#memory      { color: @purple; }
+#disk        { color: @cyan;   }
+#pulseaudio  { color: @pink;   }
+#network     { color: @cyan;   }
+#temperature.critical, #network.disconnected { color: @red; }
+#pulseaudio.muted { color: @dim; }
+#tray { padding: 0 10px 0 12px; }
+#tray > .passive { -gtk-icon-effect: dim; }
+#tray > .needs-attention { -gtk-icon-effect: highlight; }
+
+tooltip {
+    background: rgba(40, 42, 54, 0.96);
+    border: 1px solid @dim;
+    border-radius: 10px;
+}
+tooltip label { color: @fg; }

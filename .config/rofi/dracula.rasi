@@ -1,0 +1,41 @@
+/* rofi — Dracula, Inter (2026-11-24) */
+* {
+    bg:        #282a36ee;
+    bg-alt:    #44475a;
+    fg:        #f8f8f2;
+    fg-dim:    #6272a4;
+    accent:    #bd93f9;
+    pink:      #ff79c6;
+    background-color: transparent;
+    text-color: @fg;
+    font: "Inter 12";
+}
+window {
+    background-color: @bg;
+    border: 2px;
+    border-color: @accent;
+    border-radius: 10px;
+    width: 640px;
+    padding: 0;
+}
+mainbox { padding: 12px; spacing: 10px; }
+inputbar {
+    children: [ prompt, entry ];
+    background-color: @bg-alt;
+    border-radius: 8px;
+    padding: 8px 12px;
+    spacing: 8px;
+}
+prompt { text-color: @accent; }
+entry { placeholder: "Search…"; placeholder-color: @fg-dim; }
+listview { lines: 8; spacing: 2px; scrollbar: false; fixed-height: false; }
+element { padding: 6px 10px; border-radius: 8px; spacing: 10px; }
+element-icon { size: 1.4em; }
+element selected { background-color: @accent; text-color: #282a36; }
+element-text { text-color: inherit; }
+element alternate { background-color: transparent; }
+message { padding: 6px; }
+textbox { text-color: @fg-dim; }
+mode-switcher { spacing: 6px; }
+button { padding: 6px; border-radius: 8px; text-color: @fg-dim; }
+button selected { background-color: @bg-alt; text-color: @accent; }
