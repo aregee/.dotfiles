@@ -1,5 +1,6 @@
 // Waybar — floating Dracula bar (2026-11-25)
 {
+    "reload_style_on_change": true,   // accent.css changes on every workspace switch: re-read the CSS in place, never restart the bar
     "layer": "top",
     "position": "top",
     "height": 38,

@@ -16,7 +16,7 @@ STATE="$HOME/.cache/hypr-wallpapers"
 PAL="$STATE/palette"
 LINK="$HOME/.config/hypr/current-wallpaper"
 CFG="$HOME/.config"
-TRANSITION=(--transition-type fade --transition-duration 0.45 --transition-fps 120 --resize crop)
+TRANSITION=(--transition-type grow --transition-pos center --transition-duration 0.8 --transition-fps 120 --transition-bezier .4,0,.2,1 --resize crop)   # awww 0.12 caps every transition at ~0.3 s whatever you ask; grow-from-centre reads smoothest
 mkdir -p "$STATE" "$PAL"
 
 pick() {
@@ -61,7 +61,7 @@ write_accents() {   # $1 accent $2 accent2 $3 dim  -> app include files; reload 
     printf '/* written by wallpaper.sh */\n* { accent: #%s; pink: #%s; }\n' "$a" "$b" > "$CFG/rofi/accent.rasi"
     printf '# written by wallpaper.sh\nborder-color=#%s\n' "$a" > "$CFG/mako/accent"
     sed -i -e "s/^\$accent = rgb([0-9a-f]*)/\$accent = rgb($a)/" -e "s/^\$accent2 = rgb([0-9a-f]*)/\$accent2 = rgb($b)/" "$CFG/hypr/hyprlock.conf"
-    pkill -SIGUSR2 -x waybar 2>/dev/null   # re-read CSS
+    # Waybar: reload_style_on_change watches accent.css (imported by style.css) and re-reads the CSS in place — the old SIGUSR2 restarted the bar and flashed it
     pkill -SIGUSR1 -x kitty  2>/dev/null   # re-read kitty.conf
     makoctl reload >/dev/null 2>&1 || true
 }

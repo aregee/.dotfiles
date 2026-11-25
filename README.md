@@ -11,7 +11,7 @@ Bare git repo checked out over `$HOME` (`alias dotfiles='git --git-dir=$HOME/.do
 | | |
 |---|---|
 | ![work](.screenshots/02-work.png) kitty · Doom Emacs · btop, metrics drawer open in the bar | ![cheatsheet](.screenshots/03-cheatsheet.png) `SUPER+I` keybind sheet, drawn from the binds' own descriptions |
-| ![launcher](.screenshots/04-launcher.png) Spotlight-style rofi | the 38 s clip: `~/Videos/unixporn/final-phone-1080p.mp4` (not in the repo) |
+| ![launcher](.screenshots/04-launcher.png) Spotlight-style rofi | the 38 s clip: `~/Videos/unixporn/final-master.mp4` (not in the repo) |
 
 ## What is different here
 
