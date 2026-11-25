@@ -17,10 +17,10 @@
         "format": "{icon}",
         "format-icons": { "default": "", "active": "", "urgent": "" },
         "on-click": "activate",
-        "on-scroll-up": "hyprctl dispatch workspace e-1",
-        "on-scroll-down": "hyprctl dispatch workspace e+1",
+        "on-scroll-up": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"m-1\" })'",
+        "on-scroll-down": "hyprctl dispatch 'hl.dsp.focus({ workspace = \"m+1\" })'",
         "sort-by-number": true,
-        "persistent-workspaces": { "*": [1, 2, 3, 4, 5] }
+        "persistent-workspaces": { "DP-3": [1, 2, 3, 4, 5], "HDMI-A-1": [11, 12, 13] }
     },
     "hyprland/submap": { "format": "<span font_family='JetBrainsMono Nerd Font Propo' size='large' rise='-1pt'>󰌌</span> {}" },
     "hyprland/window": {

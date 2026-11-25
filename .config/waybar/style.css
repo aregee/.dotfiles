@@ -60,7 +60,7 @@ window#waybar.empty #window { padding: 0; }
 /* music: the visualiser is the module; the title rides along for a moment on a track change */
 #custom-music { color: @accent; font-family: "JetBrainsMono Nerd Font Mono"; font-size: 12px; padding: 0 12px 0 10px; }
 #custom-music.silent { color: alpha(@accent, 0.3); }
-#custom-music.paused { color: @dim; }
+#custom-music.paused { color: alpha(@accent, 0.5); }   /* paused: the wallpaper accent, faded, never a fixed grey */
 #custom-music.announce { color: @accent; }
 #temperature.critical, #network.disconnected { color: @red; }
 #pulseaudio.muted { color: @dim; }

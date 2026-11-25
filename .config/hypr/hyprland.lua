@@ -25,7 +25,9 @@ function aux_display(on)             -- global: `hyprctl dispatch 'function() au
     if on then hl.monitor(AUX_ON) else hl.monitor({ output = AUX, disabled = true }) end
     hl.exec_cmd("notify-send -t 1500 -a Hyprland '" .. (on and "aux display: portrait" or "aux display: off") .. "'")
 end
-hl.on("monitor.added", function() if aux_wanted() then hl.monitor(AUX_ON) end end)   -- hotplug re-check: keep it as asked
+hl.on("monitor.added", function()   -- hotplug re-check: keep it as asked, and give the panel its own picture
+    if aux_wanted() then hl.monitor(AUX_ON); hl.exec_cmd("sh -c 'sleep 1; " .. os.getenv("HOME") .. "/.config/hypr/wallpaper.sh set-aux'") end
+end)
 
 ---------------------
 ---- MY PROGRAMS ----
@@ -74,7 +76,7 @@ hl.config({
         },
         resize_on_border = true,
         allow_tearing = true,       -- only windows with the `immediate` rule actually tear (cs2 below)
-        layout = "master",          -- awesome "tile": master left, stack right
+        layout = "master",          -- awesome centerwork: master centred, stack left and right
     },
     decoration = {
         rounding = 12,
@@ -88,7 +90,8 @@ hl.config({
         new_status = "slave",
         new_on_top = false,
         mfact = 0.55,
-        orientation = "left",
+        orientation = "center",              -- awesome centerwork: master in the middle, the stack splits left and right
+        slave_count_for_center_master = 0,   -- a lone window sits centred at mfact too, instead of stretching across the ultrawide
     },
     dwindle = { preserve_split = true },
     misc = {
@@ -171,6 +174,9 @@ end
 
 hl.on("workspace.active", function(ws)
     if not ws or ws.special then return end
+    if ws.monitor and ws.monitor.name == AUX then   -- side panel tags: their own picture there, the theme stays the main display's
+        hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh set " .. tostring(ws.id)); return
+    end
     local id = ws.id
     if id and id > 0 then current_ws = id; apply_accent(id); apply_time_of_day() end
     hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/wallpaper.sh set " .. (id and tostring(id) or ""))
@@ -183,7 +189,12 @@ function reapply_accent() apply_accent(current_ws) end
 -- awesome tags: home, web, dev, proc, lounge
 local tags = { "home", "web", "dev", "proc", "lounge" }
 for i, name in ipairs(tags) do
-    hl.workspace_rule({ workspace = tostring(i), default_name = name, persistent = true })
+    hl.workspace_rule({ workspace = tostring(i), default_name = name, persistent = true, monitor = "DP-3" })
+end
+-- the side panel has tags of its own (11..19, awesome: every screen has its own tags): SUPER+n pressed
+-- while it has focus means 10+n there, so the main display never changes underneath you
+for i = 1, 9 do
+    hl.workspace_rule({ workspace = tostring(10 + i), monitor = AUX, default = (i == 1) })
 end
 -- dropdown terminal (SUPER+Z), like awesome's quake
 hl.workspace_rule({ workspace = "special:quake", on_created_empty = "kitty --class quake", gaps_out = 40 })
@@ -342,9 +353,14 @@ K(M .. " + O", hl.dsp.window.move({ monitor = "+1" }), "monitors · move window 
 K(M .. " + CTRL + P", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/aux-display.sh toggle"), "monitors · aux display: portrait / off")
 
 -- workspaces 1-9 (SUPER+N view, SUPER+SHIFT+N move window)
+local function ws_here(i)   -- tag i of the display that has focus: i on the main, 10+i on the side panel
+    local m = hl.get_active_monitor()
+    if m and m.name == AUX then return 10 + i end
+    return i
+end
 for i = 1, 9 do
-    K(M .. " + " .. i, hl.dsp.focus({ workspace = i }), "workspaces · go to " .. i)
-    K(M .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }), "workspaces · move window to " .. i)
+    K(M .. " + " .. i, function() hl.dispatch(hl.dsp.focus({ workspace = ws_here(i) })) end, "workspaces · go to " .. i)
+    K(M .. " + SHIFT + " .. i, function() hl.dispatch(hl.dsp.window.move({ workspace = ws_here(i) })) end, "workspaces · move window to " .. i)
 end
 K(M .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), "workspaces · scroll next")
 K(M .. " + mouse_up", hl.dsp.focus({ workspace = "e-1" }), "workspaces · scroll previous")
