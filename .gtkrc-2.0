@@ -1,0 +1,8 @@
+gtk-theme-name="Dracula"
+gtk-icon-theme-name="Papirus-Dark"
+gtk-font-name="Inter 11"
+gtk-cursor-theme-name="Bibata-Modern-Classic"
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle="hintfull"
+gtk-xft-rgba="rgb"

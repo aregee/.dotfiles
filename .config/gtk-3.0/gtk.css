@@ -1,0 +1,4 @@
+/* Dracula purple accent — matches waybar / kitty / Hyprland borders */
+@define-color accent_bg_color #bd93f9;
+@define-color accent_fg_color #282a36;
+@define-color accent_color #caa9fa;

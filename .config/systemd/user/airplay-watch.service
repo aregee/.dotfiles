@@ -1,0 +1,12 @@
+[Unit]
+Description=Keep the AirPlay (raop) sink alive and the streams on it
+After=pipewire.service wireplumber.service
+Wants=pipewire.service
+
+[Service]
+ExecStart=%h/.config/pipewire/airplay-watch.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,19 @@
+configuration {
+}
+//@theme "/usr/share/rofi/themes/Monokai.rasi"
+//@theme "/usr/share/rofi/themes/glue_pro_blue.rasi"
+@theme "~/.config/rofi/dracula.rasi"
+configuration {
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    display-drun: "";
+    display-run: "";
+    display-combi: "";
+    drun-display-format: "{name}";
+    modi: "drun,run,combi,ssh";
+}
+configuration {
+    filebrowser { directories-first: true; sorting-method: "name"; show-hidden: false; }
+    combi-hide-mode-prefix: true;
+    matching: "fuzzy";
+}
