@@ -62,7 +62,19 @@ def player():
         return dict(status=f[0], artist=f[1], title=f[2], album=f[3], pos=float(f[4] or 0), length=float(f[5] or 0), url=f[6])
     except Exception:
         return None
-st, last_key, shown_at, next_poll = None, None, 0.0, 0.0
+STATE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "waybar-music.announced")   # last announced track
+def remember(key):
+    try:
+        with open(STATE, "w") as f: f.write(key or "")
+    except OSError:
+        pass
+def remembered():
+    try:
+        with open(STATE) as f: return f.read() or None
+    except OSError:
+        return None
+st, last_key, shown_at, next_poll = None, remembered(), 0.0, 0.0   # a restart (watchdog, sink change) must not re-announce
+print(json.dumps({"text": BARS[0] * 12, "class": "silent", "tooltip": ""}), flush=True)   # never leave the island empty
 my_sink, next_sink_check = os.environ.get("MUSIC_SINK", ""), time.monotonic() + 10
 quiet_since, resumed_at = None, 0.0                          # playing but all-zero bars: the capture stream died
 was_playing = False
@@ -81,8 +93,8 @@ for line in sys.stdin:
         if playing and not was_playing: resumed_at = now    # pause -> play: an AirPlay sink may have dropped our stream
         was_playing = playing
         key = st and st["status"] == "Playing" and (st["url"] or st["title"])
-        if key and key != last_key: shown_at = now        # new track while playing -> announce it
-        last_key = key or None
+        if key and key != last_key: shown_at = now; remember(key)   # new track while playing -> announce it
+        if key: last_key = key                              # keep the last track over pauses: resume is not a new track
     bars = "".join(BARS[min(v, 7)] for v in vals)
     loud = max(vals) > 0
     if st and st["status"] == "Playing" and not loud:

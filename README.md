@@ -34,6 +34,8 @@ Bare git repo checked out over `$HOME` (`alias dotfiles='git --git-dir=$HOME/.do
 | `SUPER+SHIFT+M` | now-playing overlay |
 | `SUPER+SHIFT+Q` | power menu |
 | `SUPER+I` | keybind cheatsheet (type to filter, Esc closes) |
+| `SUPER+CTRL+P` | aux display (HDMI-A-1) on in portrait / off; off by default |
+| `ALT+CTRL+A` / `ALT+CTRL+SHIFT+A` | next / previous audio output (AirPlay, USB DAC, Odyssey, aux panel), moves playing streams along |
 
 ## Not in the repo
 

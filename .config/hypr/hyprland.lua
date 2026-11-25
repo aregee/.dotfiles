@@ -9,7 +9,21 @@ require("env")
 ------------------
 -- Single 34" ultrawide (DisplayPort-2 under X11). Same mode as under awesome; FreeSync on.
 -- Check connector names with: hyprctl monitors
-hl.monitor({ output = "", mode = "3440x1440@175", position = "auto", scale = 1, vrr = 1 })   -- Odyssey G85SB OLED: 175 Hz max
+hl.monitor({ output = "DP-3", mode = "3440x1440@175", position = "0x0", scale = 1, vrr = 1 })   -- Odyssey G85SB OLED: 175 Hz max; pinned at 0x0 so an extra panel never shifts it
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })                 -- anything unknown: preferred mode, placed to the right
+-- Auxiliary 1080p panel to the right (HDMI-A-1): normally serves the Mac, so it stays OFF here. SUPER+CTRL+P runs
+-- aux-display.sh toggle, which asks Hyprland whether the panel is on and calls aux_display(true|false): portrait beside
+-- the ultrawide (transform 3 = 270°, the way the stand holds it; 1 would be upside down), 8-bit, no VRR — the panel's safest link.
+local AUX = "HDMI-A-1"
+hl.monitor({ output = AUX, disabled = true })
+function aux_display(on)             -- global: `hyprctl dispatch 'function() aux_display(true) end'` works too
+    if on then
+        hl.monitor({ output = AUX, disabled = false, mode = "preferred", position = "3440x-240", scale = 1, transform = 3, bitdepth = 8, vrr = 0 })   -- 1080x1920, centred on the ultrawide
+    else
+        hl.monitor({ output = AUX, disabled = true })
+    end
+    hl.exec_cmd("notify-send -t 1500 -a Hyprland '" .. (on and "aux display: portrait" or "aux display: off") .. "'")
+end
 
 ---------------------
 ---- MY PROGRAMS ----
@@ -323,6 +337,7 @@ K(M .. " + SHIFT + P", toggle_accent_source, "looks · accents: wallpaper / Drac
 K(M .. " + CTRL + J", hl.dsp.focus({ monitor = "+1" }), "monitors · focus next")
 K(M .. " + CTRL + K", hl.dsp.focus({ monitor = "-1" }), "monitors · focus previous")
 K(M .. " + O", hl.dsp.window.move({ monitor = "+1" }), "monitors · move window to next")
+K(M .. " + CTRL + P", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/aux-display.sh toggle"), "monitors · aux display: portrait / off")
 
 -- workspaces 1-9 (SUPER+N view, SUPER+SHIFT+N move window)
 for i = 1, 9 do
@@ -353,7 +368,8 @@ K("XF86AudioLowerVolume", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ 
 K("XF86AudioMute", hl.dsp.exec_cmd("pactl set-sink-mute @DEFAULT_SINK@ toggle"), "media · mute", { locked = true })
 K("XF86AudioMicMute", hl.dsp.exec_cmd("pactl set-source-mute @DEFAULT_SOURCE@ toggle"), "media · mic mute", { locked = true })
 K(A .. " + CTRL + M", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ 100%"), "media · volume 100 %")
-K(A .. " + CTRL + 0", hl.dsp.exec_cmd("pactl set-sink-volume @DEFAULT_SINK@ 0%"), "media · volume 0 %")
+K(A .. " + CTRL + A", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/audio-cycle.sh next"), "media · next audio output", { locked = true })
+K(A .. " + CTRL + SHIFT + A", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.config/hypr/audio-cycle.sh prev"), "media · previous audio output", { locked = true })
 -- media (mpc in awesome; playerctl covers mpd and browsers)
 K(A .. " + CTRL + Up", hl.dsp.exec_cmd("playerctl play-pause"), "media · play / pause", { locked = true })
 K(A .. " + CTRL + Down", hl.dsp.exec_cmd("playerctl stop"), "media · stop", { locked = true })

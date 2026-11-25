@@ -3,8 +3,9 @@
 tonearm tracking the position, title / artist / album, and the real stream format
 (DSD64 · 2.82 MHz · 1-bit, or FLAC · 24-bit / 96 kHz ...). GTK3 + gtk-layer-shell, bottom-right.
 
-Shows itself while DeaDBeeF plays or is paused, hides when stopped or not running.
-SIGUSR1 toggles it by hand (SUPER+SHIFT+M). Click: play/pause. Scroll: next / previous track.
+Pops up for HOLD seconds when a track starts, on pause / resume, or on demand (SIGUSR1: SUPER+SHIFT+M or a click on
+the bar's music island), then fades away; moving the pointer over it keeps it. Hides at once when DeaDBeeF stops or quits.
+SIGUSR1 while it is up dismisses it. Click: play/pause. Scroll: next / previous track.
 
   now-playing.py                   run the overlay
   now-playing.py --preview OUT.png render one frame with a sample track, no window
@@ -27,6 +28,7 @@ PAD = 22                             # transparent margin that holds the shadow
 W, H = 500 + 2 * PAD, 176 + 2 * PAD
 DISC_C, DISC_R = (92 + PAD, 88 + PAD), 72
 RPM = 100 / 3                       # 33⅓
+HOLD = 7.0                      # seconds the card stays up after a trigger (hover keeps it)
 DRACULA = dict(bg=(0x28/255, 0x2a/255, 0x36/255), fg=(0xf8/255, 0xf8/255, 0xf2/255),
                dim=(0x62/255, 0x72/255, 0xa4/255), accent=(0xbd/255, 0x93/255, 0xf9/255),
                accent2=(0xff/255, 0x79/255, 0xc6/255))
@@ -278,7 +280,8 @@ class Overlay(Gtk.Window):
         GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.NONE)
         self.area = Gtk.DrawingArea(); self.add(self.area)
         self.area.connect("draw", self.on_draw)
-        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.SCROLL_MASK)
+        self.add_events(Gdk.EventMask.BUTTON_PRESS_MASK | Gdk.EventMask.SCROLL_MASK | Gdk.EventMask.POINTER_MOTION_MASK)
+        self.connect("motion-notify-event", lambda *_: self.touch())   # pointer over the card keeps it (enter/leave fire spuriously on map)
         self.connect("button-press-event", lambda *_: self.cmd("--toggle-pause"))
         self.connect("scroll-event", self.on_scroll)
         self.st, self.angle, self.last_t = None, 0.0, time.monotonic()
@@ -286,7 +289,7 @@ class Overlay(Gtk.Window):
         self.fade = None
         self.cover, self.cover_dir = None, None
         self.accent, self.accent2 = read_accents()
-        self.forced = None          # None: automatic; True/False: user override until the track changes
+        self.hide_at = 0.0          # monotonic time the card fades out (re-armed by every trigger and by hover)
         self.visible = False
         self.anim = None
         GLib.timeout_add(1000, self.poll); self.poll()
@@ -301,16 +304,25 @@ class Overlay(Gtk.Window):
         self.cmd("--next" if ev.direction == Gdk.ScrollDirection.DOWN else "--prev"); return True
 
     def toggle(self):
-        self.forced = not self.visible
-        self.apply_visibility(); return True
+        if self.visible: self.hide_card()
+        else: self.show_for()
+        return True
 
-    def apply_visibility(self):
-        auto = bool(self.st) and self.st["state"] in ("playing", "paused")
-        want = auto if self.forced is None else self.forced
-        if want and not self.visible:
+    def touch(self):
+        self.hide_at = max(self.hide_at, time.monotonic() + 3.0)   # every pointer move over the card buys 3 s
+        return False
+
+    def show_for(self, seconds=HOLD):
+        """Show (or keep showing) the card and arm the auto-dismiss."""
+        if not (self.st and self.st["state"] in ("playing", "paused")): return
+        self.hide_at = time.monotonic() + seconds
+        if not self.visible:
             self.visible = True
             self.set_opacity(0.0); self.show_all(); self.start_fade(1.0)
-        elif not want and self.visible:
+        self.ensure_anim()
+
+    def hide_card(self):
+        if self.visible:
             self.visible = False
             self.start_fade(0.0)
         self.ensure_anim()
@@ -353,19 +365,27 @@ class Overlay(Gtk.Window):
 
     def poll(self):
         st = query()
+        trigger = False
         if st and (self.st is None or st["path"] != self.st["path"]):
-            self.forced = None                                   # new track: back to automatic
+            trigger = True                                       # new track
             d = os.path.dirname(st["path"])
             if d != self.cover_dir:
                 c = find_cover(st["path"], st["album"], st["artist"])
                 self.cover = load_cover_surface(c, 54) if c else None
                 self.cover_dir = d
             probe_format(st["path"])
-        if st is None and self.st is not None:
-            self.forced = None
+        elif st and self.st and st["state"] != self.st["state"]:
+            trigger = True                                       # pause / resume
         self.st = st
         self.accent, self.accent2 = read_accents()
-        self.apply_visibility()
+        if not (st and st["state"] in ("playing", "paused")):
+            self.hide_card()                                     # stopped or gone: no card
+        elif trigger:
+            self.show_for()
+        elif self.visible and time.monotonic() >= self.hide_at:
+            self.hide_card()
+        if os.environ.get("NOWPLAYING_DEBUG"):
+            print(f"poll t={time.monotonic():.1f} vis={self.visible} hide_at={self.hide_at:.1f} trig={trigger} st={st and st['state']} op={self.get_opacity():.2f}", file=sys.stderr, flush=True)
         if self.visible:
             self.area.queue_draw()
         return True
