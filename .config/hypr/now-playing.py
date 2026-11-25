@@ -9,7 +9,8 @@ SIGUSR1 toggles it by hand (SUPER+SHIFT+M). Click: play/pause. Scroll: next / pr
   now-playing.py                   run the overlay
   now-playing.py --preview OUT.png render one frame with a sample track, no window
 """
-import glob, hashlib, json, math, os, re, signal, subprocess, sys, time
+import glob, hashlib, json, math, os, re, signal, subprocess, sys, time, warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 import gi
 gi.require_version("Gtk", "3.0")
@@ -22,8 +23,9 @@ CACHE  = os.path.join(HOME, ".cache", "now-playing")
 ACCENT_CSS = os.path.join(HOME, ".config", "waybar", "accent.css")
 SEP = ";;"                          # deadbeef turns tabs into "_" and eats < >, so use a plain multi-char separator
 TF = SEP.join(("%isplaying%", "%ispaused%", "%artist%", "%title%", "%album%", "%path%", "%playback_time_seconds%", "%length_seconds%"))
-W, H = 500, 176
-DISC_C, DISC_R = (92, 88), 72
+PAD = 22                             # transparent margin that holds the shadow
+W, H = 500 + 2 * PAD, 176 + 2 * PAD
+DISC_C, DISC_R = (92 + PAD, 88 + PAD), 72
 RPM = 100 / 3                       # 33⅓
 DRACULA = dict(bg=(0x28/255, 0x2a/255, 0x36/255), fg=(0xf8/255, 0xf8/255, 0xf2/255),
                dim=(0x62/255, 0x72/255, 0xa4/255), accent=(0xbd/255, 0x93/255, 0xf9/255),
@@ -183,10 +185,16 @@ def fmt_time(s):
 
 def draw(cr, st, angle, accent, accent2, cover):
     bg, fg, dim = DRACULA["bg"], DRACULA["fg"], DRACULA["dim"]
-    # card
-    rounded_rect(cr, 0.5, 0.5, W - 1, H - 1, 12)
-    cr.set_source_rgba(*bg, 0.86); cr.fill_preserve()
-    cr.set_source_rgba(*accent, 0.55); cr.set_line_width(1); cr.stroke()
+    # soft shadow, then the glass card with a hairline accent edge and an inner highlight
+    cw, ch = W - 2 * PAD, H - 2 * PAD
+    for i in range(10, 0, -1):
+        rounded_rect(cr, PAD - i, PAD - i + 6, cw + 2 * i, ch + 2 * i, 12 + i)
+        cr.set_source_rgba(0, 0, 0, 0.045); cr.fill()
+    rounded_rect(cr, PAD + 0.5, PAD + 0.5, cw - 1, ch - 1, 12)
+    cr.set_source_rgba(*bg, 0.80); cr.fill_preserve()
+    cr.set_source_rgba(*accent, 0.35); cr.set_line_width(1); cr.stroke()
+    rounded_rect(cr, PAD + 1.5, PAD + 1.5, cw - 3, ch - 3, 11)
+    cr.set_source_rgba(1, 1, 1, 0.05); cr.set_line_width(1); cr.stroke()
     cx, cy = DISC_C
     # platter shadow
     g = cairo.RadialGradient(cx, cy, DISC_R - 4, cx, cy, DISC_R + 10)
@@ -230,9 +238,9 @@ def draw(cr, st, angle, accent, accent2, cover):
     cr.set_source_rgb(0.55, 0.55, 0.58); cr.arc(px, py, 6, 0, 2 * math.pi); cr.fill()
     cr.set_source_rgb(*accent); cr.arc(nx, ny, 2.6, 0, 2 * math.pi); cr.fill()
     # text block
-    x0, maxw = 186, W - 186 - 16
+    x0, maxw = 186 + PAD, W - 186 - 16 - 2 * PAD
     if st:
-        y = 22
+        y = 22 + PAD
         y += text(cr, st["title"] or os.path.basename(st["path"]), x0, y, 13.5, fg, bold=True, max_w=maxw) + 3
         y += text(cr, st["artist"], x0, y, 12, accent, max_w=maxw) + 1
         y += text(cr, st["album"], x0, y, 11, dim, max_w=maxw) + 10
@@ -244,10 +252,10 @@ def draw(cr, st, angle, accent, accent2, cover):
             cr.set_source_rgb(*accent); rounded_rect(cr, x0, y + 2, max(3, maxw * prog), 3, 1.5); cr.fill()
         text(cr, f"{fmt_time(st['pos'])} / {fmt_time(st['length'])}", x0, y + 10, 9.5, dim, mono=True)
         icon = "" if st["state"] == "playing" else ""
-        text(cr, icon, W - 34, y + 7, 11, accent2, mono=True)
+        text(cr, icon, W - PAD - 34, y + 7, 11, accent2, mono=True)
     else:
-        text(cr, "DeaDBeeF", x0, 60, 13, dim, bold=True)
-        text(cr, "nothing playing", x0, 82, 11, dim)
+        text(cr, "DeaDBeeF", x0, 60 + PAD, 13, dim, bold=True)
+        text(cr, "nothing playing", x0, 82 + PAD, 11, dim)
 
 
 class Overlay(Gtk.Window):
@@ -261,9 +269,12 @@ class Overlay(Gtk.Window):
         GtkLayerShell.init_for_window(self)
         GtkLayerShell.set_namespace(self, "now-playing")
         GtkLayerShell.set_layer(self, GtkLayerShell.Layer.TOP)
-        for edge in (GtkLayerShell.Edge.BOTTOM, GtkLayerShell.Edge.RIGHT):
+        edges = [GtkLayerShell.Edge.BOTTOM]
+        if os.environ.get("NOWPLAYING_ANCHOR", "right") != "center":
+            edges.append(GtkLayerShell.Edge.RIGHT)           # default: bottom-right corner
+        for edge in edges:
             GtkLayerShell.set_anchor(self, edge, True)
-            GtkLayerShell.set_margin(self, edge, 18)
+            GtkLayerShell.set_margin(self, edge, 18 - PAD + 4)
         GtkLayerShell.set_keyboard_mode(self, GtkLayerShell.KeyboardMode.NONE)
         self.area = Gtk.DrawingArea(); self.add(self.area)
         self.area.connect("draw", self.on_draw)
@@ -271,6 +282,8 @@ class Overlay(Gtk.Window):
         self.connect("button-press-event", lambda *_: self.cmd("--toggle-pause"))
         self.connect("scroll-event", self.on_scroll)
         self.st, self.angle, self.last_t = None, 0.0, time.monotonic()
+        self.speed = 0.0            # current angular velocity (rad/s); eases towards 33 1/3 rpm or 0
+        self.fade = None
         self.cover, self.cover_dir = None, None
         self.accent, self.accent2 = read_accents()
         self.forced = None          # None: automatic; True/False: user override until the track changes
@@ -295,20 +308,48 @@ class Overlay(Gtk.Window):
         auto = bool(self.st) and self.st["state"] in ("playing", "paused")
         want = auto if self.forced is None else self.forced
         if want and not self.visible:
-            self.show_all(); self.visible = True
+            self.visible = True
+            self.set_opacity(0.0); self.show_all(); self.start_fade(1.0)
         elif not want and self.visible:
-            self.hide(); self.visible = False
+            self.visible = False
+            self.start_fade(0.0)
+        self.ensure_anim()
+
+    def start_fade(self, target):
+        self.fade_target, self.fade_t0 = target, time.monotonic()
+        self.fade_from = self.get_opacity()
+        if self.fade is None:
+            self.fade = GLib.timeout_add(16, self.fade_step)
+
+    def fade_step(self):
+        k = min(1.0, (time.monotonic() - self.fade_t0) / 0.28)
+        k = 1 - (1 - k) ** 3                                     # ease-out cubic
+        self.set_opacity(self.fade_from + (self.fade_target - self.fade_from) * k)
+        if k >= 1.0:
+            self.fade = None
+            if self.fade_target == 0.0 and not self.visible:
+                self.hide()
+            return False
+        return True
+
+    def ensure_anim(self):
         playing = self.visible and self.st and self.st["state"] == "playing"
-        if playing and self.anim is None:
+        want = playing or self.speed > 0.02
+        if want and self.anim is None:
             self.last_t = time.monotonic()
             self.anim = GLib.timeout_add(33, self.tick)
-        elif not playing and self.anim is not None:
-            GLib.source_remove(self.anim); self.anim = None
 
     def tick(self):
         now = time.monotonic(); dt = now - self.last_t; self.last_t = now
-        self.angle = (self.angle + 2 * math.pi * RPM / 60 * dt) % (2 * math.pi)
-        self.area.queue_draw(); return True
+        target = 2 * math.pi * RPM / 60 if (self.st and self.st["state"] == "playing" and self.visible) else 0.0
+        rate = 2.2 if target > 0 else 1.1                        # spin-up ~1 s, spin-down ~2.5 s
+        self.speed += (target - self.speed) * min(1.0, dt * rate)
+        self.angle = (self.angle + self.speed * dt) % (2 * math.pi)
+        self.area.queue_draw()
+        if target == 0.0 and self.speed < 0.02:
+            self.speed = 0.0; self.anim = None
+            return False
+        return True
 
     def poll(self):
         st = query()

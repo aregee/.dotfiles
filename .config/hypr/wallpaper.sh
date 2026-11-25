@@ -76,6 +76,7 @@ apply() {      # show workspace $1's picture and its accents
     local ws="${1:-$(active_ws)}" img
     [ -z "$ws" ] || [ "$ws" -lt 1 ] 2>/dev/null && return 0
     img=$(wall_for "$ws")
+    echo "$ws" > "$STATE/active-ws"          # read by hyprland.lua on a config reload
     if [ "$(cat "$STATE/current" 2>/dev/null)" != "$img" ]; then   # unchanged: no transition
         echo "$img" > "$STATE/current"
         ln -sfn "$img" "$LINK"
@@ -88,8 +89,8 @@ apply() {      # show workspace $1's picture and its accents
 case "${1:-set}" in
     init)    ensure_daemon; rm -f "$STATE/current" "$STATE/accent-current"; apply; (palette_all &) ;;
     set)     ensure_daemon; apply "$2" ;;
-    shuffle) rm -f "$STATE"/ws-* "$STATE/current"; ensure_daemon; apply ;;
-    reroll)  ws=$(active_ws); rm -f "$STATE/ws-$ws" "$STATE/current"; ensure_daemon; apply "$ws" ;;
+    shuffle) rm -f "$STATE"/ws-* "$STATE/current"; ensure_daemon; apply; hyprctl dispatch 'function() reapply_accent() end' >/dev/null 2>&1 ;;
+    reroll)  ws=$(active_ws); rm -f "$STATE/ws-$ws" "$STATE/current"; ensure_daemon; apply "$ws"; hyprctl dispatch 'function() reapply_accent() end' >/dev/null 2>&1 ;;
     palette) palette "$2" ;;
     palette-all) palette_all ;;
     accent-reset) rm -f "$STATE/accent-current"; write_accents bd93f9 ff79c6 44475a ;;

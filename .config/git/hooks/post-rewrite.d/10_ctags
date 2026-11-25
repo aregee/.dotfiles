@@ -1,8 +1,0 @@
-#!/bin/sh
-
-hookpath=$(git config core.hooksPath)
-hookpath=${hookpath/#\~/$HOME}
-
-case "$1" in
-    rebase) exec "$hookpath/post-merge" ;;
-esac

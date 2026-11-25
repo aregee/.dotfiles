@@ -126,3 +126,11 @@ alias neofetch=fastfetch
 
 # Powerlevel10k prompt config; `p10k configure` would regenerate it
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# System-installed zsh plugins (2026-11-25); syntax highlighting must stay last
+[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
+[ -f /usr/share/fzf/completion.zsh ]   && source /usr/share/fzf/completion.zsh
+[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ] && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+ZSH_AUTOSUGGEST_STRATEGY=(history completion); ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#6272a4'
+[ -f /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh ] && source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh && { bindkey '^[[A' history-substring-search-up; bindkey '^[[B' history-substring-search-down; }
+[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ] && source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh

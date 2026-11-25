@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-acpi | grep -Po 'Battery 0: \K.*'
