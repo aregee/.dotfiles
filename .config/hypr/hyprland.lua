@@ -11,19 +11,21 @@ require("env")
 -- Check connector names with: hyprctl monitors
 hl.monitor({ output = "DP-3", mode = "3440x1440@175", position = "0x0", scale = 1, vrr = 1 })   -- Odyssey G85SB OLED: 175 Hz max; pinned at 0x0 so an extra panel never shifts it
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })                 -- anything unknown: preferred mode, placed to the right
--- Auxiliary 1080p panel to the right (HDMI-A-1): normally serves the Mac, so it stays OFF here. SUPER+CTRL+P runs
--- aux-display.sh toggle, which asks Hyprland whether the panel is on and calls aux_display(true|false): portrait beside
--- the ultrawide (transform 3 = 270°, the way the stand holds it; 1 would be upside down), 8-bit, no VRR — the panel's safest link.
+-- Auxiliary 1080p panel to the right (HDMI-A-1): normally serves the Mac, so it stays OFF unless asked. SUPER+CTRL+P runs
+-- aux-display.sh toggle, which keeps the wish in ~/.cache/hypr-aux-on and calls aux_display(true|false): portrait beside
+-- the ultrawide (transform 3 = 270°, the way the stand holds it), 8-bit, no VRR — the panel's safest link.
+-- The panel re-announces itself every few minutes and Hyprland re-applies the registered rule on every hotplug, so the
+-- rule itself follows the state file, and monitor.added re-applies it too.
 local AUX = "HDMI-A-1"
-hl.monitor({ output = AUX, disabled = true })
+local AUX_STATE = os.getenv("HOME") .. "/.cache/hypr-aux-on"
+local AUX_ON = { output = AUX, disabled = false, mode = "preferred", position = "3440x-240", scale = 1, transform = 3, bitdepth = 8, vrr = 0 }   -- 1080x1920, centred on the ultrawide
+local function aux_wanted() local f = io.open(AUX_STATE); if f then f:close(); return true end; return false end
+if aux_wanted() then hl.monitor(AUX_ON) else hl.monitor({ output = AUX, disabled = true }) end
 function aux_display(on)             -- global: `hyprctl dispatch 'function() aux_display(true) end'` works too
-    if on then
-        hl.monitor({ output = AUX, disabled = false, mode = "preferred", position = "3440x-240", scale = 1, transform = 3, bitdepth = 8, vrr = 0 })   -- 1080x1920, centred on the ultrawide
-    else
-        hl.monitor({ output = AUX, disabled = true })
-    end
+    if on then hl.monitor(AUX_ON) else hl.monitor({ output = AUX, disabled = true }) end
     hl.exec_cmd("notify-send -t 1500 -a Hyprland '" .. (on and "aux display: portrait" or "aux display: off") .. "'")
 end
+hl.on("monitor.added", function() if aux_wanted() then hl.monitor(AUX_ON) end end)   -- hotplug re-check: keep it as asked
 
 ---------------------
 ---- MY PROGRAMS ----

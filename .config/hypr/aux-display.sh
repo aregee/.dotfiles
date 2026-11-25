@@ -7,6 +7,7 @@ want=$1; [ "$want" = toggle ] && { [ "$state" = on ] && want=off || want=on; }
 [ "$want" = "$state" ] && exit 0
 GPU=alsa_card.pci-0000_0b_00.1
 old_prof=$(pactl list cards | awk '/Name: '"$GPU"'/{f=1} f && /Active Profile:/{print $3; exit}'); old_def=$(pactl get-default-sink)
+STATE=$HOME/.cache/hypr-aux-on; [ "$want" = on ] && touch "$STATE" || rm -f "$STATE"      # the Lua rule and its monitor.added handler follow this
 hyprctl dispatch "function() aux_display($([ "$want" = on ] && echo true || echo false)) end" >/dev/null
 # WirePlumber jumps the GPU's single HDMI/DP audio profile to a panel that just appeared, which silently moves sound
 # off the Odyssey. Put the profile, the default sink and the streams back where they were.
