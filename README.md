@@ -47,10 +47,16 @@ Bare git repo checked out over `$HOME` (`alias dotfiles='git --git-dir=$HOME/.do
 | `SUPER+CTRL+P` | aux display (HDMI-A-1) on in portrait / off; off by default |
 | `ALT+CTRL+A` / `ALT+CTRL+SHIFT+A` | next / previous audio output (AirPlay, USB DAC, Odyssey, aux panel), moves playing streams along |
 
+## Lineage
+
+Where it all started, awesome 3.5 and a dual-head multicolor theme: https://github.com/aregee/awesome-wm
+Where it ended up: this repo. The ten years in between live on the `legacy-x11` branch.
+Same four habits the whole way: a dropdown terminal, rotating wallpapers, per-screen tags, a lock screen. Only the compositor changed.
+
 ## Not in the repo
 
 Dracula GTK theme (`~/.themes`), Bibata cursor (`~/.icons`), wallpapers (`~/Pictures/Wallpapers`).
 The `accent.*` files and `hyprlock-accent.conf` are generated at runtime; the committed ones are the plain Dracula defaults
 and are marked `skip-worktree`, so they never show up as modified.
 
-Ten years of awesome / X11 history (2017-2026, started from someone else's dotfiles) lives on the `legacy-x11` branch.
+The `legacy-x11` branch was started from someone else's dotfiles in 2017 and carries their identity and theme wallpapers; nothing on master comes from it.
